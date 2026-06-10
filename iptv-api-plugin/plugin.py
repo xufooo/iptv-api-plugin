@@ -4,15 +4,30 @@ iptv-api-plugin — Dispatcharr Plugin
 Aggregates iptv-api M3U streams into same-name channels and cleans stale sources.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import re
 import time
 import uuid
-from datetime import datetime, timedelta, timezone as dt_timezone
+from datetime import timedelta
 
+from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
+
+PLUGIN_KEY = "iptv-api-plugin"
+SCHEDULED_TASK_PATH = "iptv_api_plugin.scheduled_run"
+SCHEDULE_TASK_NAME_PREFIX = f"{PLUGIN_KEY} scheduled run"
+
+
+@shared_task(name=SCHEDULED_TASK_PATH)
+def scheduled_run():
+    """Celery entry point used by django-celery-beat schedules."""
+    from apps.plugins.loader import PluginManager
+
+    return PluginManager.get().run_action(PLUGIN_KEY, "scheduled_run", {})
 
 # ---------------------------------------------------------------------------
 # Lock helpers
@@ -689,30 +704,22 @@ class Plugin:
     def _sync_schedule(self, settings, logger):
         """Create/update/disable Celery Beat periodic task for specific times.
 
-        NOTE: The task path 'apps.plugins.tasks.run_plugin_action' is the standard
-        Dispatcharr plugin scheduler task. If your Dispatcharr version doesn't have
-        this task, scheduled runs will fail silently. Fall back to manual 'Run Now'.
+        Each HHMM value gets its own PeriodicTask. A single crontab with comma-
+        separated hours and minutes would run every hour/minute combination.
         """
         schedule_times_str = settings["schedule_times"]
-        task_name = f"{self.name} scheduled run"
 
         # Handle empty string — disable
         if not schedule_times_str:
             try:
                 from django_celery_beat.models import PeriodicTask
-                PeriodicTask.objects.filter(name=task_name).update(enabled=False)
+
+                PeriodicTask.objects.filter(
+                    name__startswith=SCHEDULE_TASK_NAME_PREFIX
+                ).update(enabled=False)
             except ImportError:
                 pass
             return {"status": "ok", "message": "Schedule disabled (times empty)."}
-
-        # Verify the Celery task exists before creating the schedule
-        try:
-            from apps.plugins.tasks import run_plugin_action  # noqa: F401
-        except (ImportError, ModuleNotFoundError) as e:
-            return {
-                "status": "error",
-                "message": f"Cannot schedule: task 'apps.plugins.tasks.run_plugin_action' not found ({e}).",
-            }
 
         try:
             from django_celery_beat.models import CrontabSchedule, PeriodicTask
@@ -722,48 +729,71 @@ class Plugin:
                 "message": "django_celery_beat not available — cannot create schedule.",
             }
 
-        # Parse HHMM times into hour/minute lists
-        hours = []
-        minutes = []
+        # Parse HHMM times into distinct hour/minute pairs.
+        schedule_times = []
+        invalid_parts = []
+        seen = set()
         for part in schedule_times_str.split(","):
             part = part.strip()
             if len(part) == 4 and part.isdigit():
                 h, m = int(part[:2]), int(part[2:])
                 if 0 <= h < 24 and 0 <= m < 60:
-                    hours.append(str(h))
-                    minutes.append(str(m))
+                    key = f"{h:02d}{m:02d}"
+                    if key not in seen:
+                        seen.add(key)
+                        schedule_times.append((key, str(h), str(m)))
+                    continue
+            invalid_parts.append(part or "<empty>")
 
-        if not hours:
+        if invalid_parts or not schedule_times:
             return {
                 "status": "error",
                 "message": f"Invalid schedule times: '{schedule_times_str}'. Use HHMM format, e.g. 0600,1300,1800.",
             }
 
-        # Create a single CrontabSchedule with comma-separated hours/minutes
-        hour_expr = ",".join(sorted(set(hours)))
-        minute_expr = ",".join(sorted(set(minutes)))
-        crontab, _ = CrontabSchedule.objects.get_or_create(
-            minute=minute_expr,
-            hour=hour_expr,
-            day_of_week="*",
-            day_of_month="*",
-            month_of_year="*",
-        )
+        active_names = []
+        for time_key, hour, minute in schedule_times:
+            crontab_kwargs = {
+                "minute": minute,
+                "hour": hour,
+                "day_of_week": "*",
+                "day_of_month": "*",
+                "month_of_year": "*",
+            }
+            try:
+                from core.models import CoreSettings
 
-        PeriodicTask.objects.update_or_create(
-            name=task_name,
-            defaults={
-                "crontab": crontab,
-                "task": "apps.plugins.tasks.run_plugin_action",
-                "args": json.dumps([self.name, "scheduled_run"]),
-                "kwargs": json.dumps({}),
-                "enabled": True,
-            },
-        )
+                crontab_kwargs["timezone"] = CoreSettings.get_system_time_zone()
+            except Exception:
+                pass
+
+            try:
+                crontab, _ = CrontabSchedule.objects.get_or_create(**crontab_kwargs)
+            except TypeError:
+                crontab_kwargs.pop("timezone", None)
+                crontab, _ = CrontabSchedule.objects.get_or_create(**crontab_kwargs)
+
+            task_name = f"{SCHEDULE_TASK_NAME_PREFIX} {time_key}"
+            active_names.append(task_name)
+            PeriodicTask.objects.update_or_create(
+                name=task_name,
+                defaults={
+                    "crontab": crontab,
+                    "interval": None,
+                    "task": SCHEDULED_TASK_PATH,
+                    "args": json.dumps([]),
+                    "kwargs": json.dumps({}),
+                    "enabled": True,
+                },
+            )
+
+        PeriodicTask.objects.filter(
+            name__startswith=SCHEDULE_TASK_NAME_PREFIX
+        ).exclude(name__in=active_names).update(enabled=False)
 
         return {
             "status": "ok",
-            "message": f"Schedule set to run daily at: {', '.join(f'{h:02d}:{m:02d}' for h, m in zip(sorted(set(hours)), sorted(set(minutes))))}",
+            "message": f"Schedule set to run daily at: {', '.join(f'{int(h):02d}:{int(m):02d}' for _, h, m in schedule_times)}",
         }
 
     # ------------------------------------------------------------------
