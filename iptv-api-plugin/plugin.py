@@ -280,6 +280,7 @@ class Plugin:
 
     def _build_fields(self):
         """Dynamically build fields, loading ChannelProfile list at runtime."""
+        # TODO: expose Channel Profile once Dispatcharr reliably renders this dynamic field.
         channel_profile_field = {
             "id": "channel_profile",
             "label": "Channel Profile",

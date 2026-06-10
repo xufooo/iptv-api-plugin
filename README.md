@@ -4,7 +4,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-一个适用于 `Dispatcharr` 的插件，用于处理 `iptv-api` 生成的流，按名称归并频道，清理失效流和孤儿流，并支持定时运行、预览和频道分组。
+一个适用于 `Dispatcharr` 的插件，用于处理 `iptv-api` 生成的流，按名称归并频道，清理失效流和孤儿流，并支持定时运行、预览和指定频道组名。
 
 ## 功能
 
@@ -15,7 +15,7 @@
 - 清理失效流
 - 清理孤儿流
 - 支持定时运行
-- 支持频道分组
+- 支持指定频道组名
 
 ## 动作
 
@@ -26,13 +26,16 @@
 
 ## 配置
 
-- `Channel Profile`：将频道加入指定频道分组
-- `Channel Group`：创建频道时使用的分组名
+- `Channel Group`：创建频道时使用的频道组名
 - `Max Streams Per Channel`：每个频道保留的流数量
 - `Cleanup Stale Streams`：是否删除失效流
 - `Cleanup Orphan Streams`：是否删除孤儿流
 - `Schedule Times`：定时运行时间，格式 `HHMM`，可逗号分隔
 - `Dry Run Mode`：是否默认使用预览模式
+
+## TODO
+
+- `Channel Profile`：后续版本计划支持将频道加入指定 profile
 
 ## 说明
 
