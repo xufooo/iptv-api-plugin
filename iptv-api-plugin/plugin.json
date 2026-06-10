@@ -1,0 +1,102 @@
+{
+  "name": "iptv-api-plugin",
+  "version": "1.0.3",
+  "description": "Aggregate iptv-api M3U streams into same-name channels and clean stale sources.",
+  "author": "Dispatcharr Community",
+  "help_url": "https://github.com/Guovin/iptv-api",
+  "fields": [
+    {
+      "id": "channel_profile",
+      "label": "Channel Profile",
+      "type": "string",
+      "default": "",
+      "help_text": "Runtime plugin.py replaces this with a select field. Leave empty to skip profile membership changes."
+    },
+    {
+      "id": "channel_group",
+      "label": "Channel Group",
+      "type": "string",
+      "default": "iptv-api",
+      "help_text": "Channel group name used when creating channels."
+    },
+    {
+      "id": "max_streams_per_channel",
+      "label": "Max Streams Per Channel",
+      "type": "number",
+      "default": 3,
+      "help_text": "Maximum number of streams retained and linked for each channel."
+    },
+    {
+      "id": "cleanup_stale_streams",
+      "label": "Cleanup Stale Streams",
+      "type": "boolean",
+      "default": true,
+      "help_text": "Delete streams marked as is_stale after aggregation."
+    },
+    {
+      "id": "cleanup_orphan_streams",
+      "label": "Cleanup Orphan Streams",
+      "type": "boolean",
+      "default": false,
+      "help_text": "Delete streams not linked to any channel. Custom streams excluded."
+    },
+    {
+      "id": "schedule_times",
+      "label": "Schedule Times (24-hour)",
+      "type": "string",
+      "default": "0600",
+      "help_text": "Comma-separated times to run daily. Format HHMM, e.g. 0600,1300,1800."
+    },
+    {
+      "id": "dry_run_mode",
+      "label": "Dry Run Mode",
+      "type": "boolean",
+      "default": false,
+      "help_text": "Preview changes without writing to database."
+    }
+  ],
+  "actions": [
+    {
+      "id": "run_now",
+      "label": "Run Now",
+      "description": "Aggregate streams into channels and apply cleanup.",
+      "button_label": "Run Now",
+      "button_variant": "filled",
+      "button_color": "blue",
+      "confirm": {
+        "required": true,
+        "title": "Run iptv-api aggregation?",
+        "message": "This creates channels, changes stream mappings, and may delete stale streams."
+      }
+    },
+    {
+      "id": "preview",
+      "label": "Preview",
+      "description": "Dry-run aggregation regardless of Dry Run Mode setting.",
+      "button_label": "Preview",
+      "button_variant": "outline",
+      "button_color": "gray"
+    },
+    {
+      "id": "cleanup_now",
+      "label": "Cleanup Now",
+      "description": "Run cleanup rules without rebuilding channel mappings.",
+      "button_label": "Cleanup Now",
+      "button_variant": "outline",
+      "button_color": "orange",
+      "confirm": {
+        "required": true,
+        "title": "Cleanup streams?",
+        "message": "Stale and orphan streams may be deleted."
+      }
+    },
+    {
+      "id": "sync_schedule",
+      "label": "Sync Schedule",
+      "description": "Create or update Celery Beat periodic schedule.",
+      "button_label": "Sync Schedule",
+      "button_variant": "outline",
+      "button_color": "green"
+    }
+  ]
+}
