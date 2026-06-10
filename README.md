@@ -1,70 +1,39 @@
 # iptv-api-plugin
 
-[![Dispatcharr plugin](https://img.shields.io/badge/Dispatcharr-plugin-8A2BE2)](https://github.com/Dispatcharr/Dispatcharr)
+![Dispatcharr plugin](https://img.shields.io/badge/Dispatcharr-plugin-8A2BE2)
 ![Version](https://img.shields.io/badge/version-1.0.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) plugin that aggregates
-[iptv-api](https://github.com/Guovin/iptv-api) M3U streams into same-name channels
-and cleans stale sources.
+一个适用于 `Dispatcharr` 的插件，用于处理 `iptv-api` 生成的流，按名称归并频道，清理失效流和孤儿流，并支持定时运行、预览和频道分组。
 
-![logo](logo.png)
+## 功能
 
-## Features
+- 按名称归并流到同一个频道
+- 支持模糊匹配，自动忽略常见符号和质量后缀
+- 保留流的原始顺序
+- 支持预览模式
+- 清理失效流
+- 清理孤儿流
+- 支持定时运行
+- 支持频道分组
 
-- **Aggregate** — Groups streams with the same or similar name (e.g. `CCTV-1 HD`
-  and `CCTV1` are merged into one channel)
-- **Fuzzy matching** — Strips hyphens, dots, quality suffixes (HD, 4K, 高清, etc.)
-  and normalizes case so `CCTV-1` matches `CCTV1`
-- **Preserves M3U order** — Keeps the original stream order from iptv-api, which
-  is already sorted by measured speed
-- **Dry-run mode** — Preview changes without writing to the database
-- **Cleanup** — Removes stale and orphan streams automatically
-- **Scheduling** — Periodic runs via Celery Beat
-- **Profile support** — Optionally add channels to a Channel Profile
+## 动作
 
-## Installation
+- `Run Now`：执行归并和清理
+- `Preview`：只预览，不写库
+- `Cleanup Now`：只执行清理
+- `Sync Schedule`：同步定时任务
 
-1. Download the latest `iptv-api-plugin.zip` from [Releases](https://github.com/your-repo/iptv-api-plugin/releases)
-2. In Dispatcharr, go to **Settings → Plugins → Import Plugin**
-3. Upload the zip file
-4. **Restart the Dispatcharr container** to clear Python module cache
-5. Verify the plugin version shows **1.0.4** in the plugin list
+## 配置
 
-## Configuration
+- `Channel Profile`：将频道加入指定频道分组
+- `Channel Group`：创建频道时使用的分组名
+- `Max Streams Per Channel`：每个频道保留的流数量
+- `Cleanup Stale Streams`：是否删除失效流
+- `Cleanup Orphan Streams`：是否删除孤儿流
+- `Schedule Times`：定时运行时间，格式 `HHMM`，可逗号分隔
+- `Dry Run Mode`：是否默认使用预览模式
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Channel Profile | *(empty)* | Assign channels to a profile. Leave empty to skip. |
-| Channel Group | `iptv-api` | Group name for created channels. |
-| Max Streams Per Channel | `3` | How many backup streams to keep per channel. |
-| Cleanup Stale Streams | `true` | Delete `is_stale` streams after run. |
-| Cleanup Orphan Streams | `false` | Delete streams not linked to any channel. |
-| Schedule Times | `0600` | Daily scheduled times (HHMM, comma-separated). Empty = disable. |
-| Dry Run Mode | `false` | Preview only — no database writes. |
+## 说明
 
-## Actions
-
-| Action | Description |
-|--------|-------------|
-| **Run Now** | Aggregate streams → channels, apply cleanup. |
-| **Preview** | Dry-run aggregation regardless of Dry Run Mode setting. |
-| **Cleanup Now** | Run cleanup rules without rebuilding channel mappings. |
-| **Sync Schedule** | Create/update Celery Beat periodic schedule. |
-
-## How it works
-
-1. **iptv-api** generates a speed-tested, sorted M3U file
-2. Dispatcharr imports the M3U, creating `Stream` records
-3. This plugin groups streams by normalized name and creates/updates `Channel` records
-4. Each channel gets the top N streams, preserving iptv-api's speed-based order
-5. Stale and orphan streams are cleaned up
-
-The plugin preserves iptv-api's speed-tested order rather than re-sorting by
-quality. For quality-based sorting, run
-[IPTV Checker](https://github.com/PiratesIRC/Dispatcharr-IPTV-Checker-Plugin)
-to probe stream metadata — this plugin will then respect the freshest probe data.
-
-## License
-
-MIT
+这个插件会把 `iptv-api` 生成的同名或近似名称流归并到同一个频道，并按源列表顺序保留前几个可用流。定时任务通过 Celery Beat 运行，首次需要手动点一次 `Sync Schedule` 才会创建对应计划。
