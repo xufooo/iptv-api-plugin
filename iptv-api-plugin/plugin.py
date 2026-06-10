@@ -219,7 +219,7 @@ class Plugin:
     """iptv-api-plugin — aggregate streams into channels, clean stale."""
 
     name = "iptv-api-plugin"
-    version = "1.0.3"
+    version = "1.0.4"
     description = "Aggregate iptv-api M3U streams into same-name channels and clean stale sources."
     author = "Dispatcharr Community"
     help_url = "https://github.com/Guovin/iptv-api"

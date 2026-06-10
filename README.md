@@ -1,7 +1,7 @@
 # iptv-api-plugin
 
 [![Dispatcharr plugin](https://img.shields.io/badge/Dispatcharr-plugin-8A2BE2)](https://github.com/Dispatcharr/Dispatcharr)
-![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Version](https://img.shields.io/badge/version-1.0.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 A [Dispatcharr](https://github.com/Dispatcharr/Dispatcharr) plugin that aggregates
@@ -29,7 +29,7 @@ and cleans stale sources.
 2. In Dispatcharr, go to **Settings → Plugins → Import Plugin**
 3. Upload the zip file
 4. **Restart the Dispatcharr container** to clear Python module cache
-5. Verify the plugin version shows **1.0.3** in the plugin list
+5. Verify the plugin version shows **1.0.4** in the plugin list
 
 ## Configuration
 
