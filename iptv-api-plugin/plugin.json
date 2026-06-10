@@ -3,7 +3,7 @@
   "version": "1.0.4",
   "description": "Aggregate iptv-api M3U streams into same-name channels and clean stale sources.",
   "author": "Dispatcharr Community",
-  "help_url": "https://github.com/Guovin/iptv-api",
+  "help_url": "https://github.com/xufooo/iptv-api-plugin",
   "fields": [
     {
       "id": "channel_profile",
