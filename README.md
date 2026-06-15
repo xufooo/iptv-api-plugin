@@ -1,7 +1,7 @@
 # iptv-api-plugin
 
 ![Dispatcharr plugin](https://img.shields.io/badge/Dispatcharr-plugin-8A2BE2)
-![Version](https://img.shields.io/badge/version-1.0.4-blue)
+![Version](https://img.shields.io/badge/version-1.0.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 一个适用于 `Dispatcharr` 的插件，用于处理 `iptv-api` 生成的流，按名称归并频道，清理失效流和孤儿流，并支持定时运行、预览和指定频道组名。

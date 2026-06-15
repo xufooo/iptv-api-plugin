@@ -219,7 +219,7 @@ class Plugin:
     """iptv-api-plugin — aggregate streams into channels, clean stale."""
 
     name = "iptv-api-plugin"
-    version = "1.0.4"
+    version = "1.0.5"
     description = "Aggregate iptv-api M3U streams into same-name channels and clean stale sources."
     author = "Dispatcharr Community"
     help_url = "https://github.com/xufooo/iptv-api-plugin"
@@ -392,8 +392,6 @@ class Plugin:
         if action == "scheduled_run":
             return self._run_pipeline(settings, logger, dry_run=settings["dry_run_mode"], scheduled=True)
         if action == "sync_schedule":
-            if settings["dry_run_mode"]:
-                return {"status": "ok", "message": f"[DRY RUN] Would create CrontabSchedule for times: {settings['schedule_times']}."}
             return self._sync_schedule(settings, logger)
 
         return {"status": "error", "message": f"Unknown action: {action}"}

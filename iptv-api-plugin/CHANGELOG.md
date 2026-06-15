@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.5 (2026-06-15)
+
+### Fixed
+- `Sync Schedule` now creates or updates Celery Beat tasks even when Dry Run
+  Mode is enabled. Dry Run Mode still controls whether scheduled aggregation
+  writes to the database when the scheduled run executes.
+
 ## v1.0.3 (2026-06-09)
 
 ### Changed
